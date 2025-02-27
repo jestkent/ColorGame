@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Match Memory Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f5ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.5s ease;
+            overflow: hidden;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            text-align: center;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 320px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background-color: white;
+            border-radius: 10px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .stat-box h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .stat-box p {
+            margin: 5px 0 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .game-container {
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            aspect-ratio: 1/1;
+            background-color: #ffffff;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card.matched {
+            opacity: 0.7;
+            cursor: default;
+        }
+        
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        
+        .target-card {
+            width: 100px;
+            height: 100px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.2);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+            }
+        }
+        
+        .target-inner {
+            width: 90%;
+            height: 90%;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 80%;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+        
+        .modal h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .modal p {
+            margin-bottom: 20px;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .score-highlight {
+            font-size: 2.5rem;
+            color: #3498db;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .time-bonus {
+            font-size: 1.2rem;
+            color: #27ae60;
+            margin-bottom: 20px;
+        }
+        
+        .level-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-container {
+            width: 320px;
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        @media (max-width: 375px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .game-container, .stats, .progress-container {
+                width: 290px;
+            }
+            
+            .card {
+                width: 65px;
+                height: 65px;
+            }
+            
+            .target-card {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="level-indicator">Level 1</div>
+    
+    <h1>Color Match</h1>
+    
+    <div class="stats">
+        <div class="stat-box">
+            <h3>SCORE</h3>
+            <p id="score">0</p>
+        </div>
+        <div class="stat-box">
+            <h3>TIME</h3>
+            <p id="timer">30</p>
+        </div>
+        <div class="stat-box">
+            <h3>BEST</h3>
+            <p id="best-score">0</p>
+        </div>
+    </div>
+    
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    
+    <div class="game-container">
+        <div class="target-card">
+            <div class="target-inner" id="target-color"></div>
+        </div>
+        
+        <div class="grid" id="grid"></div>
+        
+        <div class="buttons">
+            <button id="new-game-btn">New Game</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="game-over-modal">
+        <div class="modal-content">
+            <h2>Game Over!</h2>
+            <p>You've run out of time.</p>
+            <div class="score-highlight" id="final-score">0</div>
+            <button id="restart-btn">Play Again</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="level-up-modal">
+        <div class="modal-content">
+            <h2>Level Up!</h2>
+            <p>Great job! You're moving to the next level.</p>
+            <div class="time-bonus" id="time-bonus">+5 seconds</div>
+            <button id="next-level-btn">Continue</button>
+        </div>
+    </div>
+    
+    <script>
+        // Game variables
+        let score = 0;
+        let bestScore = 0; // We'll use this variable instead of localStorage
+        let timeLeft = 30;
+        let level = 1;
+        let targetColor = '';
+        let gameInterval;
+        let colors = [];
+        let cardCount = 16;
+        let matchesNeeded = 5;
+        let matchesFound = 0;
+        
+        // DOM elements
+        const scoreEl = document.getElementById('score');
+        const bestScoreEl = document.getElementById('best-score');
+        const timerEl = document.getElementById('timer');
+        const targetColorEl = document.getElementById('target-color');
+        const gridEl = document.getElementById('grid');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const nextLevelBtn = document.getElementById('next-level-btn');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const levelUpModal = document.getElementById('level-up-modal');
+        const finalScoreEl = document.getElementById('final-score');
+        const timeBonusEl = document.getElementById('time-bonus');
+        const levelIndicator = document.querySelector('.level-indicator');
+        const progressBar = document.getElementById('progress-bar');
+        
+        // Update best score display
+        bestScoreEl.textContent = bestScore;
+        
+        // Color palettes for different levels
+        const colorPalettes = [
+            // Level 1: Basic colors
+            ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FF8000', '#8000FF'],
+            // Level 2: More subtle differences
+            ['#FF0000', '#FF3333', '#FF6666', '#CC0000', '#990000', '#FF9999', '#660000', '#330000'],
+            // Level 3: Blues with subtle differences
+            ['#0000FF', '#0033FF', '#0066FF', '#0099FF', '#00CCFF', '#3300FF', '#3333FF', '#3366FF'],
+            // Level 4: Greens with subtle differences
+            ['#00FF00', '#33FF00', '#66FF00', '#99FF00', '#00FF33', '#00FF66', '#00FF99', '#00CC00'],
+            // Level 5: Complex pastels
+            ['#FFCCCC', '#CCFFCC', '#CCCCFF', '#FFFFCC', '#FFCCFF', '#CCFFFF', '#FFDDCC', '#CCDDFF']
+        ];
+        
+        // Initialize the game
+        function initGame() {
+            // Reset variables
+            score = 0;
+            matchesFound = 0;
+            scoreEl.textContent = score;
+            
+            // Set time based on level
+            timeLeft = 30 + (level - 1) * 5;
+            timerEl.textContent = timeLeft;
+            
+            // Update level indicator
+            levelIndicator.textContent = `Level ${level}`;
+            
+            // Update progress bar
+            updateProgressBar();
+            
+            // Generate colors for this level
+            generateColors();
+            
+            // Pick target color
+            setTargetColor();
+            
+            // Create cards
+            createCards();
+            
+            // Start timer
+            startTimer();
+        }
+        
+        // Generate colors based on level
+        function generateColors() {
+            // Get the palette for current level (or use the last one for higher levels)
+            const paletteIndex = Math.min(level - 1, colorPalettes.length - 1);
+            const basePalette = colorPalettes[paletteIndex];
+            
+            // Create a copy of the palette
+            colors = [...basePalette];
+            
+            // For higher levels, add more similar colors
+            if (level > colorPalettes.length) {
+                const extraVariations = level - colorPalettes.length;
+                for (let i = 0; i < extraVariations && colors.length < 16; i++) {
+                    const baseColor = basePalette[i % basePalette.length];
+                    const variation = slightlyModifyColor(baseColor);
+                    colors.push(variation);
+                }
+            }
+            
+            // Ensure we have enough colors
+            while (colors.length < cardCount) {
+                colors = colors.concat(colors);
+            }
+            
+            // Shuffle colors
+            colors = shuffleArray(colors.slice(0, cardCount));
+        }
+        
+        // Slightly modify a color for higher difficulty levels
+        function slightlyModifyColor(hexColor) {
+            // Convert hex to RGB
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
+            
+            // Modify slightly
+            const variation = 15; // Small variation for similar colors
+            const newR = Math.min(255, Math.max(0, r + Math.floor(Math.random() * variation * 2) - variation));
+            const newG = Math.min(255, Math.max(0, g + Math.floor(Math.random() * variation * 2) - variation));
+            const newB = Math.min(255, Math.max(0, b + Math.floor(Math.random() * variation * 2) - variation));
+            
+            // Convert back to hex
+            return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+        }
+        
+        // Set a random target color from our color array
+        function setTargetColor() {
+            const randomIndex = Math.floor(Math.random() * colors.length);
+            targetColor = colors[randomIndex];
+            targetColorEl.style.backgroundColor = targetColor;
+            document.body.style.backgroundColor = lightenColor(targetColor, 0.9);
+        }
+        
+        // Lighten a color for background use
+        function lightenColor(color, factor) {
+            // Convert hex to RGB
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            
+            // Lighten
+            const newR = Math.min(255, r + Math.floor((255 - r) * factor));
+            const newG = Math.min(255, g + Math.floor((255 - g) * factor));
+            const newB = Math.min(255, b + Math.floor((255 - b) * factor));
+            
+            // Convert back to hex
+            return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+        }
+        
+        // Create cards in the grid
+        function createCards() {
+            // Clear previous cards
+            gridEl.innerHTML = '';
+            
+            // Create new cards
+            for (let i = 0; i < cardCount; i++) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                const cardInner = document.createElement('div');
+                cardInner.className = 'card-inner';
+                cardInner.style.backgroundColor = colors[i];
+                
+                card.appendChild(cardInner);
+                
+                // Add click event
+                card.addEventListener('click', () => handleCardClick(card, colors[i]));
+                
+                gridEl.appendChild(card);
+            }
+        }
+        
+        // Handle card click
+        function handleCardClick(card, color) {
+            // Ignore if already matched
+            if (card.classList.contains('matched')) {
+                return;
+            }
+            
+            // Check if color matches target
+            if (color === targetColor) {
+                // Mark as matched
+                card.classList.add('matched');
+                
+                // Add points
+                addPoints();
+                
+                // Check for level completion
+                matchesFound++;
+                updateProgressBar();
+                
+                if (matchesFound >= matchesNeeded) {
+                    levelUp();
+                } else {
+                    // Pick a new target color
+                    setTimeout(() => {
+                        setTargetColor();
+                    }, 300);
+                }
+            } else {
+                // Wrong match - flash card
+                card.classList.add('flipped');
+                setTimeout(() => {
+                    card.classList.remove('flipped');
+                }, 500);
+                
+                // Penalty
+                if (score > 0) {
+                    score = Math.max(0, score - 5);
+                    scoreEl.textContent = score;
+                }
+                
+                // Time penalty
+                timeLeft = Math.max(1, timeLeft - 2);
+                timerEl.textContent = timeLeft;
+            }
+        }
+        
+        // Add points for correct match
+        function addPoints() {
+            // Base points + level bonus
+            const basePoints = 10;
+            const levelBonus = level * 5;
+            const timeBonus = Math.floor(timeLeft / 5);
+            
+            const points = basePoints + levelBonus + timeBonus;
+            score += points;
+            
+            // Update score display
+            scoreEl.textContent = score;
+            
+            // Check for best score
+            if (score > bestScore) {
+                bestScore = score;
+                bestScoreEl.textContent = bestScore;
+                // We no longer use localStorage here
+            }
+            
+            // Visual feedback - flash score
+            scoreEl.style.color = '#27ae60';
+            setTimeout(() => {
+                scoreEl.style.color = '#2c3e50';
+            }, 300);
+        }
+        
+        // Level up
+        function levelUp() {
+            // Stop timer
+            clearInterval(gameInterval);
+            
+            // Show level up modal
+            levelUpModal.classList.add('show');
+            
+            // Time bonus based on level
+            const timeBonus = 5 + level;
+            timeBonusEl.textContent = `+${timeBonus} seconds`;
+            
+            // Increase level
+            level++;
+            
+            // Adjust difficulty
+            if (level % 3 === 0) {
+                matchesNeeded = Math.min(12, matchesNeeded + 1);
+            }
+        }
+        
+        // Update progress bar
+        function updateProgressBar() {
+            const progress = (matchesFound / matchesNeeded) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        // Start timer
+        function startTimer() {
+            clearInterval(gameInterval);
+            
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                
+                // Flash timer when low on time
+                if (timeLeft <= 5) {
+                    timerEl.style.color = '#e74c3c';
+                } else {
+                    timerEl.style.color = '#2c3e50';
+                }
+                
+                if (timeLeft <= 0) {
+                    gameOver();
+                }
+            }, 1000);
+        }
+        
+        // Game over
+        function gameOver() {
+            // Stop timer
+            clearInterval(gameInterval);
+            
+            // Show game over modal
+            gameOverModal.classList.add('show');
+            finalScoreEl.textContent = score;
+        }
+        
+        // Utility function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Event listeners
+        newGameBtn.addEventListener('click', () => {
+            level = 1;
+            matchesNeeded = 5;
+            initGame();
+        });
+        
+        restartBtn.addEventListener('click', () => {
+            gameOverModal.classList.remove('show');
+            level = 1;
+            matchesNeeded = 5;
+            initGame();
+        });
+        
+        nextLevelBtn.addEventListener('click', () => {
+            levelUpModal.classList.remove('show');
+            initGame();
+        });
+        
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
