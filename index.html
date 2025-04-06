@@ -1,205 +1,841 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Color Sync: AI-Powered Memory Challenge</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Match Trivia</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.21.2/babel.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f7f9fc;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .app-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      text-align: center;
+      padding: 20px 0;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #eaeaea;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 1.1rem;
+      color: #7f8c8d;
+    }
+    
+    .start-screen, .tutorial-screen, .category-select, .game-screen, .result-screen {
+      background-color: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    
+    .start-screen h2, .tutorial-screen h2, .category-select h2, .game-screen h2, .result-screen h2 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    
+    .btn {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 10px;
+    }
+    
+    .btn:hover {
+      background-color: #2980b9;
+    }
+    
+    .btn-start {
+      background-color: #2ecc71;
+      font-size: 1.2rem;
+      padding: 15px 30px;
+    }
+    
+    .btn-start:hover {
+      background-color: #27ae60;
+    }
+    
+    .category-btn {
+      display: inline-block;
+      width: calc(50% - 20px);
+      margin: 10px;
+      padding: 20px;
+      font-size: 1.1rem;
+    }
+    
+    .game-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+    }
+    
+    .timer {
+      font-weight: bold;
+    }
+    
+    .question {
+      font-size: 1.3rem;
+      margin-bottom: 30px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .instruction {
+      font-size: 1.1rem;
+      margin: 20px 0;
+      color: #7f8c8d;
+      font-weight: bold;
+    }
+    
+    .answers {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-gap: 15px;
+      margin-bottom: 30px;
+    }
+    
+    .answer-btn {
+      padding: 15px;
+      border: 2px solid #eaeaea;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: left;
+      background-color: white;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    .answer-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .answer-btn.selected {
+      background-color: #f8f9fa;
+      border-color: #3498db;
+    }
+    
+    .color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .color-options {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    
+    .color-option {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin: 0 15px;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.3s;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .color-option:hover {
+      transform: scale(1.1);
+    }
+    
+    .color-option.selected {
+      border-color: #2c3e50;
+      transform: scale(1.1);
+    }
+    
+    .feedback {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    
+    .feedback.correct {
+      background-color: rgba(46, 204, 113, 0.2);
+      color: #27ae60;
+    }
+    
+    .feedback.incorrect {
+      background-color: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+    
+    .submit-btn {
+      background-color: #9b59b6;
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      margin-top: 20px;
+    }
+    
+    .submit-btn:hover {
+      background-color: #8e44ad;
+    }
+    
+    .submit-btn:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+    
+    .result-screen h2 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    
+    .score {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #2ecc71;
+      margin: 20px 0;
+    }
+    
+    .stats {
+      margin: 30px 0;
+      text-align: left;
+    }
+    
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+    
+    .level-indicator {
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .level-indicator span {
+      display: inline-block;
+      width: 30px;
+      height: 5px;
+      margin: 0 5px;
+      background-color: #ddd;
+      border-radius: 5px;
+    }
+    
+    .level-indicator .active {
+      background-color: #3498db;
+    }
+    
+    .tutorial-illustration {
+      max-width: 100%;
+      margin: 20px 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .tutorial-step {
+      margin: 30px 0;
+      text-align: left;
+    }
+    
+    .tutorial-step h3 {
+      margin-bottom: 10px;
+      color: #3498db;
+    }
+    
+    @media (max-width: 600px) {
+      .answers {
+        grid-template-columns: 1fr;
+      }
+      
+      .category-btn {
+        width: calc(100% - 20px);
+      }
+      
+      .color-options {
+        flex-wrap: wrap;
+      }
+      
+      .color-option {
+        margin: 10px;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden">
-    <div id="app" class="w-full max-w-md">
-        <div class="bg-white shadow-2xl rounded-2xl p-6 relative overflow-hidden">
-            <div class="absolute top-4 right-4 flex items-center space-x-2">
-                <div id="ai-hint" class="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-bold cursor-pointer hover:bg-purple-600 transition">
-                    AI Hint
-                </div>
-                <div id="level-indicator" class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                    Level 1
-                </div>
-            </div>
-
-            <h1 class="text-3xl font-bold text-center text-gray-800 mb-4">Color Sync</h1>
-
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-white shadow-md rounded-lg p-3 text-center">
-                    <h3 class="text-xs text-gray-500 uppercase">Score</h3>
-                    <p id="score" class="text-2xl font-bold text-blue-600">0</p>
-                </div>
-                <div class="bg-white shadow-md rounded-lg p-3 text-center">
-                    <h3 class="text-xs text-gray-500 uppercase">Time</h3>
-                    <p id="timer" class="text-2xl font-bold text-green-600">30</p>
-                </div>
-                <div class="bg-white shadow-md rounded-lg p-3 text-center">
-                    <h3 class="text-xs text-gray-500 uppercase">Best</h3>
-                    <p id="best-score" class="text-2xl font-bold text-purple-600">0</p>
-                </div>
-            </div>
-
-            <div class="relative mb-6">
-                <div id="target-color" class="w-32 h-32 mx-auto rounded-2xl shadow-2xl mb-4 flex items-center justify-center">
-                    <span id="target-text" class="text-white font-bold text-2xl"></span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <div id="grid" class="grid grid-cols-4 gap-3"></div>
-
-            <div class="flex justify-center mt-6 space-x-4">
-                <button id="new-game-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition transform hover:-translate-y-1 hover:scale-110">
-                    New Game
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-        <div id="modal" class="bg-white rounded-2xl p-8 max-w-md w-full text-center transform transition-all">
-            <h2 id="modal-title" class="text-3xl font-bold mb-4"></h2>
-            <p id="modal-description" class="mb-6 text-gray-600"></p>
-            <div id="modal-score" class="text-5xl font-bold text-blue-600 mb-6"></div>
-            <button id="modal-action" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full transition transform hover:-translate-y-1 hover:scale-110"></button>
-        </div>
-    </div>
-
-    <script>
-        // Most of the original game logic remains the same, with these key enhancements:
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    // Game data
+    const categories = [
+      {
+        name: "Geography",
+        icon: "🌎",
+        color: "#3498db"
+      },
+      {
+        name: "History",
+        icon: "📜",
+        color: "#e74c3c"
+      },
+      {
+        name: "Science",
+        icon: "🔬",
+        color: "#2ecc71"
+      },
+      {
+        name: "Math",
+        icon: "🔢",
+        color: "#f39c12"
+      }
+    ];
+    
+    const questions = {
+      Geography: [
+        {
+          question: "What is the capital of Japan?",
+          answers: [
+            { text: "Tokyo", isCorrect: true, color: "#FF5733" },
+            { text: "Osaka", isCorrect: false, color: "#33A8FF" },
+            { text: "Seoul", isCorrect: false, color: "#33FF57" },
+            { text: "Beijing", isCorrect: false, color: "#F3FF33" }
+          ],
+          difficulty: 1
+        },
+        {
+          question: "Which river is the longest in the world?",
+          answers: [
+            { text: "Amazon", isCorrect: false, color: "#33FF57" },
+            { text: "Nile", isCorrect: true, color: "#F3FF33" },
+            { text: "Mississippi", isCorrect: false, color: "#33A8FF" },
+            { text: "Yangtze", isCorrect: false, color: "#FF5733" }
+          ],
+          difficulty: 1
+        },
+        {
+          question: "Which country has the largest land area?",
+          answers: [
+            { text: "Canada", isCorrect: false, color: "#33A8FF" },
+            { text: "China", isCorrect: false, color: "#FF5733" },
+            { text: "United States", isCorrect: false, color: "#33FF57" },
+            { text: "Russia", isCorrect: true, color: "#F3FF33" }
+          ],
+          difficulty: 2
+        }
+      ],
+      History: [
+        {
+          question: "In which year did World War II end?",
+          answers: [
+            { text: "1943", isCorrect: false, color: "#FF5733" },
+            { text: "1945", isCorrect: true, color: "#33A8FF" },
+            { text: "1947", isCorrect: false, color: "#33FF57" },
+            { text: "1950", isCorrect: false, color: "#F3FF33" }
+          ],
+          difficulty: 1
+        },
+        {
+          question: "Who was the first President of the United States?",
+          answers: [
+            { text: "Thomas Jefferson", isCorrect: false, color: "#33FF57" },
+            { text: "John Adams", isCorrect: false, color: "#F3FF33" },
+            { text: "George Washington", isCorrect: true, color: "#FF5733" },
+            { text: "Benjamin Franklin", isCorrect: false, color: "#33A8FF" }
+          ],
+          difficulty: 1
+        },
+        {
+          question: "Which ancient civilization built the Machu Picchu?",
+          answers: [
+            { text: "Aztecs", isCorrect: false, color: "#FF5733" },
+            { text: "Mayans", isCorrect: false, color: "#33A8FF" },
+            { text: "Incas", isCorrect: true, color: "#33FF57" },
+            { text: "Olmecs", isCorrect: false, color: "#F3FF33" }
+          ],
+          difficulty: 2
+        }
+      ],
+      Science: [
+        {
+          question: "What is the chemical symbol for Gold?",
+          answers: [
+            { text: "Au", isCorrect: true, color: "#F3FF33" },
+            { text: "Ag", isCorrect: false, color: "#33A8FF" },
+            { text: "Fe", isCorrect: false, color: "#33FF57" },
+            { text: "Cu", isCorrect: false, color: "#FF5733" }
+          ],
+          difficulty: 1
+        },
+        {
+          question: "Which planet is known as the Red Planet?",
+          answers: [
+            { text: "Venus", isCorrect: false, color: "#33A8FF" },
+            { text: "Mars", isCorrect: true, color: "#FF5733" },
+            { text: "Jupiter", isCorrect: false, color: "#33FF57" },
+            { text: "Saturn", isCorrect: false, color: "#F3FF33" }
+          ],
+          difficulty: 1
+        },
+        {
+          question: "What is the hardest natural substance on Earth?",
+          answers: [
+            { text: "Ruby", isCorrect: false, color: "#FF5733" },
+            { text: "Titanium", isCorrect: false, color: "#33A8FF" },
+            { text: "Diamond", isCorrect: true, color: "#F3FF33" },
+            { text: "Quartz", isCorrect: false, color: "#33FF57" }
+          ],
+          difficulty: 2
+        }
+      ],
+      Math: [
+        {
+          question: "What is the value of π (pi) to two decimal places?",
+          answers: [
+            { text: "3.12", isCorrect: false, color: "#FF5733" },
+            { text: "3.14", isCorrect: true, color: "#33A8FF" },
+            { text: "3.16", isCorrect: false, color: "#33FF57" },
+            { text: "3.18", isCorrect: false, color: "#F3FF33" }
+          ],
+          difficulty: 1
+        },
+        {
+          question: "What is the square root of 144?",
+          answers: [
+            { text: "12", isCorrect: true, color: "#33FF57" },
+            { text: "14", isCorrect: false, color: "#F3FF33" },
+            { text: "10", isCorrect: false, color: "#FF5733" },
+            { text: "16", isCorrect: false, color: "#33A8FF" }
+          ],
+          difficulty: 1
+        },
+        {
+          question: "If a = 5 and b = 7, what is the value of a² + b²?",
+          answers: [
+            { text: "49", isCorrect: false, color: "#FF5733" },
+            { text: "74", isCorrect: true, color: "#33A8FF" },
+            { text: "64", isCorrect: false, color: "#33FF57" },
+            { text: "35", isCorrect: false, color: "#F3FF33" }
+          ],
+          difficulty: 2
+        }
+      ]
+    };
+    
+    // Main App Component  
+    function App() {
+      const [gameState, setGameState] = React.useState('start'); // start, tutorial, category, game, feedback, result
+      const [selectedCategory, setSelectedCategory] = React.useState(null);
+      const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0);
+      const [score, setScore] = React.useState(0);
+      const [timeLeft, setTimeLeft] = React.useState(30);
+      const [correctAnswers, setCorrectAnswers] = React.useState(0);
+      const [incorrectAnswers, setIncorrectAnswers] = React.useState(0);
+      const [timerActive, setTimerActive] = React.useState(false);
+      const [level, setLevel] = React.useState(1);
+      const [selectedAnswer, setSelectedAnswer] = React.useState(null);
+      const [selectedColor, setSelectedColor] = React.useState(null);
+      const [feedback, setFeedback] = React.useState({ visible: false, correct: false });
+      
+      const startGame = () => {
+        setGameState('tutorial');
+      };
+      
+      const startAfterTutorial = () => {
+        setGameState('category');
+      };
+      
+      const selectCategory = (category) => {
+        setSelectedCategory(category);
+        setGameState('game');
+        setCurrentQuestionIndex(0);
+        setScore(0);
+        setTimeLeft(30);
+        setCorrectAnswers(0);
+        setIncorrectAnswers(0);
+        setTimerActive(true);
+        setLevel(1);
+        setSelectedAnswer(null);
+        setSelectedColor(null);
+      };
+      
+      const handleAnswerSelect = (index) => {
+        setSelectedAnswer(index);
+      };
+      
+      const handleColorSelect = (color) => {
+        setSelectedColor(color);
+      };
+      
+      const checkAnswer = () => {
+        // Pause the timer
+        setTimerActive(false);
         
-        // AI Hint mechanism
-        const aiHintBtn = document.getElementById('ai-hint');
-        aiHintBtn.addEventListener('click', provideAIHint);
-
-        function provideAIHint() {
-            // Simple AI hint mechanism
-            const unmatchedCards = Array.from(gridEl.children)
-                .filter(card => !card.classList.contains('matched'));
+        const currentQuestion = questions[selectedCategory][currentQuestionIndex];
+        const selectedAnswerObj = currentQuestion.answers[selectedAnswer];
+        
+        // Check if the selected color matches the color of the correct answer
+        const isCorrect = selectedAnswerObj.isCorrect && selectedAnswerObj.color === selectedColor;
+        
+        setFeedback({
+          visible: true,
+          correct: isCorrect
+        });
+        
+        if (isCorrect) {
+          setScore(score + (timeLeft * 10));
+          setCorrectAnswers(correctAnswers + 1);
+        } else {
+          setIncorrectAnswers(incorrectAnswers + 1);
+        }
+        
+        // Show feedback for 2 seconds then move on
+        setTimeout(() => {
+          setFeedback({ visible: false, correct: false });
+          
+          // Move to next question or end game
+          if (currentQuestionIndex < questions[selectedCategory].length - 1) {
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+            setTimeLeft(30);
+            setSelectedAnswer(null);
+            setSelectedColor(null);
+            setTimerActive(true);
+          } else {
+            setGameState('result');
+          }
+        }, 2000);
+      };
+      
+      const restartGame = () => {
+        setGameState('category');
+        setCurrentQuestionIndex(0);
+        setScore(0);
+        setTimeLeft(30);
+        setCorrectAnswers(0);
+        setIncorrectAnswers(0);
+        setSelectedAnswer(null);
+        setSelectedColor(null);
+      };
+      
+      // Timer effect
+      React.useEffect(() => {
+        let timer;
+        if (timerActive && timeLeft > 0) {
+          timer = setTimeout(() => {
+            setTimeLeft(timeLeft - 1);
+          }, 1000);
+        } else if (timerActive && timeLeft === 0) {
+          // Time's up - move to next question or end game
+          setTimerActive(false);
+          
+          // Show feedback for timed-out questions
+          setFeedback({
+            visible: true,
+            correct: false,
+            message: "Time's up!"
+          });
+          
+          setIncorrectAnswers(incorrectAnswers + 1);
+          
+          setTimeout(() => {
+            setFeedback({ visible: false, correct: false });
             
-            if (unmatchedCards.length > 0) {
-                const hintCards = unmatchedCards
-                    .filter(card => card.querySelector('.card-inner').style.backgroundColor === targetColor);
-                
-                if (hintCards.length > 0) {
-                    hintCards.forEach(card => {
-                        card.classList.add('hint');
-                        setTimeout(() => card.classList.remove('hint'), 1000);
-                    });
-                    
-                    // Penalty for using AI hint
-                    score = Math.max(0, score - 10);
-                    scoreEl.textContent = score;
-                }
-            }
-        }
-
-        // Enhanced visual and sound feedback
-        function playMatchSound() {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
-            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.1);
-        }
-
-        // GSAP animations for more satisfying interactions
-        function animateCorrectMatch(card) {
-            gsap.to(card, {
-                scale: 1.1,
-                rotation: 360,
-                duration: 0.5,
-                ease: "elastic.out(1, 0.3)"
-            });
-        }
-
-        function animateWrongMatch(card) {
-            gsap.to(card, {
-                x: [-10, 10, -10, 10, 0],
-                duration: 0.3,
-                ease: "power1.inOut"
-            });
-        }
-
-        // Modify existing handleCardClick to include new animations
-        function handleCardClick(card, color) {
-            if (card.classList.contains('matched')) return;
-
-            if (color === targetColor) {
-                playMatchSound();
-                card.classList.add('matched');
-                animateCorrectMatch(card);
-                // Rest of the existing match logic...
+            if (currentQuestionIndex < questions[selectedCategory].length - 1) {
+              setCurrentQuestionIndex(currentQuestionIndex + 1);
+              setTimeLeft(30);
+              setSelectedAnswer(null);
+              setSelectedColor(null);
+              setTimerActive(true);
             } else {
-                animateWrongMatch(card);
-                // Rest of the existing wrong match logic...
+              setGameState('result');
             }
+          }, 2000);
         }
-
-        // Enhanced modal system
-        function showModal(type, score) {
-            const modalOverlay = document.getElementById('modal-overlay');
-            const modal = document.getElementById('modal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalDescription = document.getElementById('modal-description');
-            const modalScore = document.getElementById('modal-score');
-            const modalAction = document.getElementById('modal-action');
-
-            if (type === 'gameOver') {
-                modalTitle.textContent = 'Game Over!';
-                modalDescription.textContent = 'Your color matching skills have been tested.';
-                modalScore.textContent = score;
-                modalAction.textContent = 'Play Again';
-                modalAction.onclick = () => {
-                    modalOverlay.classList.add('hidden');
-                    initGame();
-                };
-            } else if (type === 'levelUp') {
-                modalTitle.textContent = 'Level Up!';
-                modalDescription.textContent = 'Your color perception is improving!';
-                modalScore.textContent = `Level ${level}`;
-                modalAction.textContent = 'Continue';
-                modalAction.onclick = () => {
-                    modalOverlay.classList.add('hidden');
-                    initGame();
-                };
-            }
-
-            modalOverlay.classList.remove('hidden');
-            gsap.from(modal, {
-                scale: 0.7,
-                opacity: 0,
-                duration: 0.5,
-                ease: "back.out(1.7)"
-            });
+        
+        return () => clearTimeout(timer);
+      }, [timeLeft, timerActive, currentQuestionIndex, selectedCategory]);
+      
+      // Render appropriate screen based on game state
+      const renderScreen = () => {
+        switch (gameState) {
+          case 'start':
+            return <StartScreen onStart={startGame} />;
+          case 'tutorial':
+            return <TutorialScreen onStart={startAfterTutorial} />;
+          case 'category':
+            return <CategorySelect onSelect={selectCategory} />;
+          case 'game':
+            return (
+              <GameScreen 
+                category={selectedCategory}
+                question={questions[selectedCategory][currentQuestionIndex]}
+                timeLeft={timeLeft}
+                questionNumber={currentQuestionIndex + 1}
+                totalQuestions={questions[selectedCategory].length}
+                level={level}
+                selectedAnswer={selectedAnswer}
+                selectedColor={selectedColor}
+                onAnswerSelect={handleAnswerSelect}
+                onColorSelect={handleColorSelect}
+                onSubmit={checkAnswer}
+                feedback={feedback}
+              />
+            );
+          case 'result':
+            return (
+              <ResultScreen 
+                score={score}
+                correctAnswers={correctAnswers}
+                incorrectAnswers={incorrectAnswers}
+                totalQuestions={questions[selectedCategory].length}
+                onRestart={restartGame}
+                category={selectedCategory}
+              />
+            );
+          default:
+            return <StartScreen onStart={startGame} />;
         }
-
-        // Modify existing gameOver and levelUp functions to use new modal
-        function gameOver() {
-            clearInterval(gameInterval);
-            showModal('gameOver', score);
-        }
-
-        function levelUp() {
-            clearInterval(gameInterval);
-            showModal('levelUp');
-        }
-    </script>
-    <style>
-        .card.hint {
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-    </style>
+      };
+      
+      return (
+        <div className="app-container">
+          <div className="header">
+            <h1>🎨 Color Match Trivia 🧠</h1>
+            <p>Match the right color with the correct answer!</p>
+          </div>
+          {renderScreen()}
+        </div>
+      );
+    }
+    
+    // Start Screen Component
+    function StartScreen({ onStart }) {
+      return (
+        <div className="start-screen">
+          <h2>Welcome to Color Match Trivia!</h2>
+          <p>Test your knowledge with a colorful twist!</p>
+          <p>Answer trivia questions and select the color that matches the correct answer.</p>
+          <button className="btn btn-start" onClick={onStart}>Start Game</button>
+        </div>
+      );
+    }
+    
+    // Tutorial Screen Component
+    function TutorialScreen({ onStart }) {
+      return (
+        <div className="tutorial-screen">
+          <h2>How to Play</h2>
+          
+          <div className="tutorial-step">
+            <h3>Step 1: Read the Question</h3>
+            <p>Each question has four possible answer choices. Only one is correct!</p>
+          </div>
+          
+          <div className="tutorial-step">
+            <h3>Step 2: Select the Correct Answer</h3>
+            <p>Click on the answer you believe is correct.</p>
+          </div>
+          
+          <div className="tutorial-step">
+            <h3>Step 3: Match the Color</h3>
+            <p>Notice the colored dot next to each answer. Select the color that corresponds to the correct answer from the color palette below.</p>
+          </div>
+          
+          <div className="tutorial-step">
+            <h3>Step 4: Submit Your Response</h3>
+            <p>After selecting both an answer and a color, click "Submit Answer" to see if you're right!</p>
+          </div>
+          
+          <div className="tutorial-illustration">
+            <p><strong>Example:</strong></p>
+            <p>Question: What is the capital of Japan?</p>
+            <div style={{ display: "flex", alignItems: "center", margin: "10px 0" }}>
+              <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "#FF5733", marginRight: "10px" }}></div>
+              <p>Tokyo (correct)</p>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", margin: "10px 0" }}>
+              <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "#33A8FF", marginRight: "10px" }}></div>
+              <p>Osaka</p>
+            </div>
+            <p>You would select "Tokyo" and then select the RED color from the palette.</p>
+          </div>
+          
+          <button className="btn btn-start" onClick={onStart}>Got It, Let's Play!</button>
+        </div>
+      );
+    }
+    
+    // Category Selection Component
+    function CategorySelect({ onSelect }) {
+      return (
+        <div className="category-select">
+          <h2>Select a Category</h2>
+          <div className="categories">
+            {categories.map((category) => (
+              <button 
+                key={category.name}
+                className="btn category-btn"
+                style={{ backgroundColor: category.color }}
+                onClick={() => onSelect(category.name)}
+              >
+                {category.icon} {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    
+    // Game Screen Component
+    function GameScreen({ 
+      category, 
+      question, 
+      timeLeft, 
+      questionNumber, 
+      totalQuestions, 
+      level,
+      selectedAnswer,
+      selectedColor,
+      onAnswerSelect,
+      onColorSelect,
+      onSubmit,
+      feedback
+    }) {
+      const canSubmit = selectedAnswer !== null && selectedColor !== null;
+      
+      return (
+        <div className="game-screen">
+          <div className="game-info">
+            <div>Category: {category}</div>
+            <div className="timer">Time: {timeLeft}s</div>
+          </div>
+          
+          <div className="level-indicator">
+            <span className={level >= 1 ? "active" : ""}></span>
+            <span className={level >= 2 ? "active" : ""}></span>
+            <span className={level >= 3 ? "active" : ""}></span>
+          </div>
+          
+          <p>Question {questionNumber} of {totalQuestions}</p>
+          
+          <div className="question">{question.question}</div>
+          
+          {/* Answer options */}
+          <div className="answers">
+            {question.answers.map((answer, index) => (
+              <button 
+                key={index}
+                className={`answer-btn ${selectedAnswer === index ? 'selected' : ''}`}
+                onClick={() => onAnswerSelect(index)}
+              >
+                <div className="color-dot" style={{ backgroundColor: answer.color }}></div>
+                <span>{answer.text}</span>
+              </button>
+            ))}
+          </div>
+          
+          <div className="instruction">Select the color that matches the correct answer:</div>
+          
+          {/* Color selection */}
+          <div className="color-options">
+            {[...new Set(question.answers.map(a => a.color))].map((color, index) => (
+              <div 
+                key={index}
+                className={`color-option ${selectedColor === color ? 'selected' : ''}`}
+                style={{ backgroundColor: color }}
+                onClick={() => onColorSelect(color)}
+              ></div>
+            ))}
+          </div>
+          
+          {/* Feedback message */}
+          {feedback.visible && (
+            <div className={`feedback ${feedback.correct ? 'correct' : 'incorrect'}`}>
+              {feedback.correct ? (
+                <p>Correct! Well done! ✓</p>
+              ) : (
+                <p>{feedback.message || "Incorrect! Try again next time. ✗"}</p>
+              )}
+            </div>
+          )}
+          
+          <button 
+            className="btn submit-btn"
+            onClick={onSubmit}
+            disabled={!canSubmit}
+          >
+            Submit Answer
+          </button>
+        </div>
+      );
+    }
+    
+    // Result Screen Component
+    function ResultScreen({ score, correctAnswers, incorrectAnswers, totalQuestions, onRestart, category }) {
+      const accuracy = Math.round((correctAnswers / totalQuestions) * 100);
+      
+      return (
+        <div className="result-screen">
+          <h2>Game Complete!</h2>
+          <p>Category: {category}</p>
+          <div className="score">{score} points</div>
+          
+          <div className="stats">
+            <div className="stat">
+              <span>Correct Answers:</span>
+              <span>{correctAnswers} / {totalQuestions}</span>
+            </div>
+            <div className="stat">
+              <span>Accuracy:</span>
+              <span>{accuracy}%</span>
+            </div>
+            <div className="stat">
+              <span>Incorrect Answers:</span>
+              <span>{incorrectAnswers}</span>
+            </div>
+          </div>
+          
+          <button className="btn" onClick={onRestart}>Play Again</button>
+        </div>
+      );
+    }
+    
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
 </body>
 </html>
