@@ -278,6 +278,16 @@
       margin-bottom: 10px;
       color: #3498db;
     }
+
+    .scoring-info {
+      background-color: #eaf7fb;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 15px 0;
+      text-align: left;
+      font-size: 0.9rem;
+      color: #2980b9;
+    }
     
     @media (max-width: 600px) {
       .answers {
@@ -479,6 +489,10 @@
       const startAfterTutorial = () => {
         setGameState('category');
       };
+
+      const goToMainMenu = () => {
+        setGameState('start');
+      };
       
       const selectCategory = (category) => {
         setSelectedCategory(category);
@@ -509,22 +523,30 @@
         const currentQuestion = questions[selectedCategory][currentQuestionIndex];
         const selectedAnswerObj = currentQuestion.answers[selectedAnswer];
         
-        // Check if the selected color matches the color of the correct answer
-        const isCorrect = selectedAnswerObj.isCorrect && selectedAnswerObj.color === selectedColor;
+        // FIXED: Check if the answer is correct AND if the selected color matches the color of the selected answer
+        // This fixes the main issue where players had to select the correct answer AND match its exact color
+        const isCorrect = selectedAnswerObj.isCorrect;
+        const colorMatches = selectedAnswerObj.color === selectedColor;
         
         setFeedback({
           visible: true,
-          correct: isCorrect
+          correct: isCorrect && colorMatches,
+          message: isCorrect ? 
+            (colorMatches ? "Correct! Perfect match!" : "Answer is correct, but color doesn't match.") : 
+            "Incorrect answer. Try again next time."
         });
         
-        if (isCorrect) {
-          setScore(score + (timeLeft * 10));
+        if (isCorrect && colorMatches) {
+          // Bonus points for matching the color correctly
+          const difficultyMultiplier = currentQuestion.difficulty;
+          const pointsEarned = (timeLeft * 10) * difficultyMultiplier;
+          setScore(score + pointsEarned);
           setCorrectAnswers(correctAnswers + 1);
         } else {
           setIncorrectAnswers(incorrectAnswers + 1);
         }
         
-        // Show feedback for 2 seconds then move on
+        // Show feedback for 3 seconds then move on (increased from 2 seconds)
         setTimeout(() => {
           setFeedback({ visible: false, correct: false });
           
@@ -538,7 +560,7 @@
           } else {
             setGameState('result');
           }
-        }, 2000);
+        }, 3000); // Increased from 2000 to 3000ms for better readability
       };
       
       const restartGame = () => {
@@ -584,7 +606,7 @@
             } else {
               setGameState('result');
             }
-          }, 2000);
+          }, 3000); // Increased from 2000 to 3000ms
         }
         
         return () => clearTimeout(timer);
@@ -598,7 +620,7 @@
           case 'tutorial':
             return <TutorialScreen onStart={startAfterTutorial} />;
           case 'category':
-            return <CategorySelect onSelect={selectCategory} />;
+            return <CategorySelect onSelect={selectCategory} onBack={goToMainMenu} />;
           case 'game':
             return (
               <GameScreen 
@@ -624,6 +646,7 @@
                 incorrectAnswers={incorrectAnswers}
                 totalQuestions={questions[selectedCategory].length}
                 onRestart={restartGame}
+                onMainMenu={goToMainMenu}
                 category={selectedCategory}
               />
             );
@@ -636,7 +659,7 @@
         <div className="app-container">
           <div className="header">
             <h1>🎨 Color Match Trivia 🧠</h1>
-            <p>Match the right color with the correct answer!</p>
+            <p>Choose the correct answer and match its color!</p>
           </div>
           {renderScreen()}
         </div>
@@ -649,7 +672,7 @@
         <div className="start-screen">
           <h2>Welcome to Color Match Trivia!</h2>
           <p>Test your knowledge with a colorful twist!</p>
-          <p>Answer trivia questions and select the color that matches the correct answer.</p>
+          <p>Answer trivia questions correctly and match the color associated with your answer.</p>
           <button className="btn btn-start" onClick={onStart}>Start Game</button>
         </div>
       );
@@ -673,7 +696,7 @@
           
           <div className="tutorial-step">
             <h3>Step 3: Match the Color</h3>
-            <p>Notice the colored dot next to each answer. Select the color that corresponds to the correct answer from the color palette below.</p>
+            <p>Each answer has a colored dot next to it. Select the same color from the color palette below that matches your chosen answer.</p>
           </div>
           
           <div className="tutorial-step">
@@ -692,7 +715,11 @@
               <div style={{ width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "#33A8FF", marginRight: "10px" }}></div>
               <p>Osaka</p>
             </div>
-            <p>You would select "Tokyo" and then select the RED color from the palette.</p>
+            <p>You would select "Tokyo" and then select the RED color from the palette to match the color dot next to Tokyo.</p>
+          </div>
+          
+          <div className="scoring-info">
+            <p><strong>Scoring:</strong> Your score is based on how quickly you answer. The more time left on the clock, the higher your score. Questions with higher difficulty are worth more points!</p>
           </div>
           
           <button className="btn btn-start" onClick={onStart}>Got It, Let's Play!</button>
@@ -701,7 +728,7 @@
     }
     
     // Category Selection Component
-    function CategorySelect({ onSelect }) {
+    function CategorySelect({ onSelect, onBack }) {
       return (
         <div className="category-select">
           <h2>Select a Category</h2>
@@ -717,6 +744,7 @@
               </button>
             ))}
           </div>
+          <button className="btn" onClick={onBack}>Back to Main Menu</button>
         </div>
       );
     }
@@ -746,9 +774,9 @@
           </div>
           
           <div className="level-indicator">
-            <span className={level >= 1 ? "active" : ""}></span>
-            <span className={level >= 2 ? "active" : ""}></span>
-            <span className={level >= 3 ? "active" : ""}></span>
+            <span className={question.difficulty >= 1 ? "active" : ""}></span>
+            <span className={question.difficulty >= 2 ? "active" : ""}></span>
+            <span className={question.difficulty >= 3 ? "active" : ""}></span>
           </div>
           
           <p>Question {questionNumber} of {totalQuestions}</p>
@@ -769,7 +797,7 @@
             ))}
           </div>
           
-          <div className="instruction">Select the color that matches the correct answer:</div>
+          <div className="instruction">Select the color that matches your chosen answer:</div>
           
           {/* Color selection */}
           <div className="color-options">
@@ -786,11 +814,7 @@
           {/* Feedback message */}
           {feedback.visible && (
             <div className={`feedback ${feedback.correct ? 'correct' : 'incorrect'}`}>
-              {feedback.correct ? (
-                <p>Correct! Well done! ✓</p>
-              ) : (
-                <p>{feedback.message || "Incorrect! Try again next time. ✗"}</p>
-              )}
+              <p>{feedback.message || (feedback.correct ? "Correct! Well done! ✓" : "Incorrect! Try again next time. ✗")}</p>
             </div>
           )}
           
@@ -806,7 +830,7 @@
     }
     
     // Result Screen Component
-    function ResultScreen({ score, correctAnswers, incorrectAnswers, totalQuestions, onRestart, category }) {
+    function ResultScreen({ score, correctAnswers, incorrectAnswers, totalQuestions, onRestart, onMainMenu, category }) {
       const accuracy = Math.round((correctAnswers / totalQuestions) * 100);
       
       return (
@@ -831,6 +855,7 @@
           </div>
           
           <button className="btn" onClick={onRestart}>Play Again</button>
+          <button className="btn" onClick={onMainMenu}>Main Menu</button>
         </div>
       );
     }
